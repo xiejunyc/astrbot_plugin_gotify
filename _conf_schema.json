@@ -2,7 +2,7 @@
     "server": {
         "description": "监听的服务器",
         "type": "string",
-        "hint": "请输入服务器地址"
+        "hint": "请输入Gotify服务器地址"
     },
     "token": {
         "description": "客户端token",
@@ -15,8 +15,13 @@
         "hint": "要监听的application，为空则监听全部"
     },
     "chat_id": {
-        "description": "chatID",
+        "description": "转发ID",
         "type": "list",
-        "hint": "推送的chatID，可以推送多个"
+        "hint": "推送的转发ID，可以推送多个ID"
+    },
+    "chat_newserver": {
+        "description": "转发服务器",
+        "type": "string",
+        "hint": "推送给转发ID失败时会推送给此服务器"
     }
 }
