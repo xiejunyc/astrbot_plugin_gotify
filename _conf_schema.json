@@ -22,6 +22,6 @@
     "backup_forward_format": {
         "description": "备用消息服务器请求格式(仅JSON)",
         "type": "text",
-        "hint": "支持的占位符：{title}、{message}"
+        "hint": "支持的占位符：{title}、{message}，除了占位符，JSON结构内其他 {} 必须改成双括号 {{ }} "
     }
 }
