@@ -9,19 +9,14 @@
         "type": "string",
         "hint": "请输入client_token（非application_token）"
     },
-    "application": {
-        "description": "应用名称",
+    "bindings": {
+        "description": "转发绑定",
         "type": "list",
-        "hint": "要监听的application，为空则监听全部"
-    },
-    "chat_id": {
-        "description": "转发ID",
-        "type": "list",
-        "hint": "推送的转发ID，可以推送多个ID"
+        "hint": "将转发的群聊或私聊与Gotify应用名称绑定，必须绑定才会转发"
     },
     "chat_newserver": {
-        "description": "转发服务器",
+        "description": "备用消息服务器",
         "type": "string",
-        "hint": "推送给转发ID失败时会推送给此服务器"
+        "hint": "请输入备用消息服务器地址，转发给群聊或私聊失败时会将消息转发给此备用消息服务器"
     }
 }
