@@ -26,7 +26,8 @@ class MyPlugin(Star):
         self.server = config.get("server")
         self.token = config.get("token")
         self.bindings = list(config.get("bindings") or [])
-        self.chat_newserver = config.get("chat_newserver")
+        self.backup_forward_server = config.get("backup_forward_server")
+        self.backup_forward_format = config.get("backup_forward_format")
         self.gotify: AsyncGotify = AsyncGotify(
             base_url=self.server, client_token=self.token
         )
@@ -77,26 +78,35 @@ class MyPlugin(Star):
         """开始监听 Gotify 消息的异步方法，掉线时尝试重连"""
         while True:
             received: int = 0
-            content = "发送失败，请检查！"
+            backup_forward_title = ""
+            backup_forward_message = ""
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
-                    content = f"{msg.get('title')}\n{msg.get('message')}"
+                    backup_forward_title = msg.get('title', 'title获取错误')
+                    backup_forward_message = msg.get('message', 'message获取错误')
                     received = received + 1
                     await self.handle_message(msg)
 
             except Exception as e:
                 logger.error(f"Gotify 连接断开，已收到的消息 {received}，尝试重连: {e}")
-                if self.chat_newserver:
+                if self.backup_forward_server:
                     try:
+                        backup_forward_str = self.backup_forward_format.format(
+                            title=backup_forward_title,
+                            message=backup_forward_message
+                        )
+                        backup_forward_data = json.loads(backup_forward_str)
                         async with aiohttp.ClientSession() as session:
                             await session.post(
-                                self.chat_newserver,
-                                json={"msgtype": "text", "text": {"content": content}}
+                                self.backup_forward_server,
+                                json=backup_forward_data
                             )
                         logger.error(f"由于 Gotify 连接断开，消息已转发给 备用消息服务器")
+                    except json.JSONDecodeError:
+                        logger.error(f"备用服务器格式配置错误！请检查JSON语法")
                     except Exception as ee:
-                        logger.error(f"转发给 备用消息服务器 失败: {ee}")
+                        logger.error(f"备用服务器转发失败: {ee}")
             if received == 0:
                 await asyncio.sleep(60)  # 等待 1 分钟后重连
         pass
