@@ -104,9 +104,9 @@ class MyPlugin(Star):
                             )
                         logger.error(f"由于 Gotify 连接断开，消息已转发给 备用消息服务器")
                     except json.JSONDecodeError:
-                        logger.error(f"备用服务器格式配置错误！请检查JSON语法")
+                        logger.error(f"备用服务器格式配置 错误！请检查JSON语法")
                     except Exception as ee:
-                        logger.error(f"备用服务器转发失败: {ee}")
+                        logger.error(f"转发给 备用消息服务器 失败: {ee}")
             if received == 0:
                 await asyncio.sleep(60)  # 等待 1 分钟后重连
         pass
