@@ -14,9 +14,14 @@
         "type": "list",
         "hint": "将转发的群聊或私聊与Gotify应用名称绑定，必须绑定才会转发"
     },
-    "chat_newserver": {
+    "messageserver": {
         "description": "备用消息服务器",
-        "type": "string",
+        "type": "text",
         "hint": "请输入备用消息服务器地址，转发给群聊或私聊失败时会将消息转发给此备用消息服务器"
+    },
+    "messageformat": {
+        "description": "备用消息服务器请求格式(仅JSON)",
+        "type": "text",
+        "hint": "支持的占位符：{title}、{message}"
     }
 }
