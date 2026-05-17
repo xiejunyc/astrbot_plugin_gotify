@@ -65,19 +65,19 @@ class MyPlugin(Star):
                 # 分割配置：会话ID(含冒号) + 绑定的应用名
                 *session_parts, bind_appname = binding.split(':')
                 session_id = ':'.join(session_parts)
-
-                # 应用名匹配 → 转发消息
-                if bind_appname == appname:
-                    await self.context.send_message(session_id, sendMsg)
-
             except Exception as e:
                 logger.error(f"绑定配置解析失败: {binding}, 错误: {e}")
+                continue
+
+            # 应用名匹配 → 转发消息
+            if bind_appname == appname:
+                await self.context.send_message(session_id, sendMsg)
 
     async def start_listen(self):
         """开始监听 Gotify 消息的异步方法，掉线时尝试重连"""
         while True:
             received: int = 0
-            content = "Bot已离线！"
+            content = "发送失败，请检查！"
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
@@ -96,7 +96,7 @@ class MyPlugin(Star):
                             )
                         logger.error(f"由于 Gotify 连接断开，消息已转发给 备用消息服务器")
                     except Exception as ee:
-                        logger.error(f"微信通知发送失败: {ee}")
+                        logger.error(f"转发给 备用消息服务器 失败: {ee}")
             if received == 0:
                 await asyncio.sleep(60)  # 等待 1 分钟后重连
         pass
@@ -118,7 +118,7 @@ class MyPlugin(Star):
             logger.info(f"会话: {session_id} 绑定 {app_name} 成功！")
             yield event.plain_result(f"当前会话绑定【{app_name}】成功！")
         else:
-            yield event.plain_result("当前会话已绑定【{app_name}】！请勿重复操作！")
+            yield event.plain_result(f"当前会话已绑定【{app_name}】！请勿重复操作！")
             
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("关闭转发")
@@ -174,7 +174,7 @@ class MyPlugin(Star):
                 continue
 
         forwardlist_str = "\n".join(forward_list) if forward_list else "无"
-        result = f"📋 转发绑定列表：\n{forwardlist_str}"
+        result = f"转发绑定列表：\n{forwardlist_str}"
         yield event.plain_result(result)
     
     async def terminate(self):
