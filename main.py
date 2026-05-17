@@ -103,8 +103,6 @@ class MyPlugin(Star):
                                 json=backup_forward_data
                             )
                         logger.error(f"由于 Gotify 连接断开，消息已转发给 备用消息服务器")
-                    except json.JSONDecodeError:
-                        logger.error(f"备用服务器格式配置 错误！请检查JSON语法")
                     except Exception as ee:
                         logger.error(f"转发给 备用消息服务器 失败: {ee}")
             if received == 0:
@@ -112,8 +110,8 @@ class MyPlugin(Star):
         pass
 
     @filter.permission_type(PermissionType.ADMIN)
-    @filter.command("开启转发")
-    async def gotify_register_chat(self, event: AstrMessageEvent, app_name: str = ""):
+    @filter.command("转发绑定")
+    async def gotify_binding_chat(self, event: AstrMessageEvent, app_name: str = ""):
         if not app_name:
             yield event.plain_result("此指令缺少参数appname！")
             return
@@ -131,8 +129,8 @@ class MyPlugin(Star):
             yield event.plain_result(f"当前会话已绑定【{app_name}】！请勿重复操作！")
             
     @filter.permission_type(PermissionType.ADMIN)
-    @filter.command("关闭转发")
-    async def gotify_unregister_chat(self, event: AstrMessageEvent, app_name: str = ""):
+    @filter.command("转发解绑")
+    async def gotify_unbinding_chat(self, event: AstrMessageEvent, app_name: str = ""):
         if not app_name:
             yield event.plain_result("此指令缺少参数appname！")
             return
@@ -151,7 +149,7 @@ class MyPlugin(Star):
     
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("转发列表")
-    async def gotify_register_lists(self, event: AstrMessageEvent):
+    async def gotify_binding_lists(self, event: AstrMessageEvent):
         async def optimize_item(session_str: str, bind_appname: str):
             try:
                 # 分割字符串：[昵称, 消息类型, ID]
@@ -170,9 +168,9 @@ class MyPlugin(Star):
                             name = friend.get("remark") or friend.get("nickname")
                             break
                 # 拼接最终格式            
-                return f"{type_text}:{target_id}({name}) → 绑定:{bind_appname}"
+                return f"{type_text}:{target_id}({name}):{bind_appname}"
             except Exception as e:
-                return f"{session_str} → 绑定:{bind_appname}"
+                return f"{session_str}:{bind_appname}"
 
         forward_list = []
         for binding in self.bindings:
