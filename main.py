@@ -182,7 +182,7 @@ class MyPlugin(Star):
                 continue
 
         forwardlist_str = "\n".join(forward_list) if forward_list else "无"
-        result = f"转发绑定列表：\n{forwardlist_str}"
+        result = f"转发列表：\n{forwardlist_str}"
         yield event.plain_result(result)
     
     async def terminate(self):
