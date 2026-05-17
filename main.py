@@ -6,7 +6,7 @@ from astrbot.api import AstrBotConfig
 from gotify import AsyncGotify
 from gotify.response_types import Message
 import asyncio
-import requests
+import aiohttp
 import json
 
 from astrbot.core.message.message_event_result import MessageChain
@@ -25,8 +25,7 @@ class MyPlugin(Star):
         self.context = context
         self.server = config.get("server")
         self.token = config.get("token")
-        self.monitor_app_name = set(config.get("application") or [])
-        self.chat_id = list(config.get("chat_id") or [])
+        self.bindings = list(config.get("bindings") or [])
         self.chat_newserver = config.get("chat_newserver")
         self.gotify: AsyncGotify = AsyncGotify(
             base_url=self.server, client_token=self.token
@@ -52,114 +51,130 @@ class MyPlugin(Star):
             # 重新获取应用列表
             if not self.cache_app.get(msg.get("appid")):
                 logger.info(f"appid {msg.get('appid')} 不在应用列表中")
+                return
 
         # 获取应用名称
         appname = self.cache_app.get(msg.get("appid")).get("name")
+        title = msg.get('title', '')
+        content = msg.get('message', '')
+        sendMsg = MessageChain().message(f"{title}\n{content}")
 
-        # 设置了监听的app
-        if self.monitor_app_name:
-            if appname not in self.monitor_app_name:
-                logger.info(f"未监听的App: {msg.get('appname')}")
-                return
+        # 遍历绑定的列表
+        for binding in self.bindings:
+            try:
+                # 分割配置：会话ID(含冒号) + 绑定的应用名
+                *session_parts, bind_appname = binding.split(':')
+                session_id = ':'.join(session_parts)
 
-        for chat_id in self.chat_id:
-            sendMsg = MessageChain().message(
-                f"{msg.get('title')}\n{msg.get('message')}"
-            )
-            await self.context.send_message(chat_id, sendMsg)
+                # 应用名匹配 → 转发消息
+                if bind_appname == appname:
+                    await self.context.send_message(session_id, sendMsg)
+
+            except Exception as e:
+                logger.error(f"绑定配置解析失败: {binding}, 错误: {e}")
 
     async def start_listen(self):
         """开始监听 Gotify 消息的异步方法，掉线时尝试重连"""
         while True:
             received: int = 0
-            wechat = "Bot已离线！"
+            content = "Bot已离线！"
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
-                    wechat = f"{msg.get('title')}\n{msg.get('message')}"
+                    content = f"{msg.get('title')}\n{msg.get('message')}"
                     received = received + 1
                     await self.handle_message(msg)
 
             except Exception as e:
                 logger.error(f"Gotify 连接断开，已收到的消息 {received}，尝试重连: {e}")
                 if self.chat_newserver:
-                    requests.post(self.chat_newserver, json={
-                        "msgtype": "text",
-                        "text": {
-                            "content":wechat
-                        }
-                    })
-                    logger.error(f"由于 Gotify 连接断开，本次已收到的消息已转发给 WeChat")
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            await session.post(
+                                self.chat_newserver,
+                                json={"msgtype": "text", "text": {"content": content}}
+                            )
+                        logger.error(f"由于 Gotify 连接断开，消息已转发给 备用消息服务器")
+                    except Exception as ee:
+                        logger.error(f"微信通知发送失败: {ee}")
             if received == 0:
                 await asyncio.sleep(60)  # 等待 1 分钟后重连
         pass
 
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("开启转发")
-    async def gotify_register_chat(self, event: AstrMessageEvent):
+    async def gotify_register_chat(self, event: AstrMessageEvent, app_name: str = ""):
+        if not app_name:
+            yield event.plain_result("此指令缺少参数appname！")
+            return
+        
         session_id = event.unified_msg_origin
-        self.chat_id.append(session_id)
-        self.chat_id = list(set(self.chat_id))  # 去重
-        self.config["chat_id"] = self.chat_id
-        self.config.save_config()
-        logger.info(f"已从转发ID开启会话: {session_id}")
-        yield event.plain_result("当前会话开启 转发通道 成功！")
+        binding_item = f"{session_id}:{app_name}"  
 
+        if binding_item not in self.bindings:
+            self.bindings.append(binding_item)
+            self.config["bindings"] = self.bindings
+            self.config.save_config()
+            logger.info(f"会话: {session_id} 绑定 {app_name} 成功！")
+            yield event.plain_result(f"当前会话绑定【{app_name}】成功！")
+        else:
+            yield event.plain_result("当前会话已绑定【{app_name}】！请勿重复操作！")
+            
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("关闭转发")
-    async def gotify_unregister_chat(self, event: AstrMessageEvent):
+    async def gotify_unregister_chat(self, event: AstrMessageEvent, app_name: str = ""):
+        if not app_name:
+            yield event.plain_result("此指令缺少参数appname！")
+            return
+        
         session_id = event.unified_msg_origin
-        if session_id in self.chat_id:
-            self.chat_id.remove(session_id)
-            self.config["chat_id"] = self.chat_id
+        unbinding_item = f"{session_id}:{app_name}"
+
+        if unbinding_item in self.bindings:
+            self.bindings.remove(unbinding_item)
+            self.config["bindings"] = self.bindings
             self.config.save_config()
-            logger.info(f"已从转发ID关闭会话: {session_id}")
-            yield event.plain_result("当前会话关闭 转发通道 成功！")
+            logger.info(f"会话: {session_id} 解绑 {app_name} 成功！")
+            yield event.plain_result(f"当前会话解绑【{app_name}】成功！")
         else:
-            yield event.plain_result("当前会话关闭 转发通道 成功！")
+            yield event.plain_result(f"当前会话未绑定【{app_name}】！请勿重复操作！")
     
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("转发列表")
     async def gotify_register_lists(self, event: AstrMessageEvent):
-        # 定义格式化函数：解析 GroupMessage:123456 → 群聊:123456(群名)
-        async def format_item(item: str):
+        async def optimize_item(session_str: str, bind_appname: str):
             try:
                 # 分割字符串：[昵称, 消息类型, ID]
-                _, msg_type, target_id = item.split(':')
+                _, msg_type, target_id = session_str.split(':')
                 # 转换类型名称
                 type_text = "群聊" if msg_type == "GroupMessage" else "私聊"
                 
-                # 获取对应名称
                 if type_text == "群聊":
-                    # 获取群名（正常可用）
                     group_info = await event.bot.get_group_info(group_id=int(target_id))
                     name = group_info.get("group_name", "未知群")
                 else:
-                    # ✅ 修复：获取机器人【好友】的信息（备注优先 + 昵称兜底）
                     friend_list = await event.bot.get_friend_list()
                     name = "未知好友"
                     for friend in friend_list:
                         if str(friend.get("user_id")) == target_id:
-                            # 优先取备注，没有备注取昵称
                             name = friend.get("remark") or friend.get("nickname")
                             break
-                
-                # 拼接最终格式
-                return f"{type_text}:{target_id}({name})"
+                # 拼接最终格式            
+                return f"{type_text}:{target_id}({name}) → 绑定:{bind_appname}"
             except Exception as e:
-                # 解析失败强制返回未知，绝对不会空
-                return f"{type_text}:{target_id}(未知)"
+                return f"{session_str} → 绑定:{bind_appname}"
 
-        # 处理通道
-        formatted_list = []
-        for item in self.chat_id:
-            formatted_list.append(await format_item(item))
-        list = "\n".join(formatted_list) if formatted_list else "无"
+        forward_list = []
+        for binding in self.bindings:
+            try:
+                *session_parts, bind_appname = binding.split(':')
+                session_id = ':'.join(session_parts)
+                forward_list.append(await optimize_item(session_id, bind_appname))
+            except:
+                continue
 
-        # 最终消息
-        result = (
-            f"转发列表：\n{list}"
-        )
+        forwardlist_str = "\n".join(forward_list) if forward_list else "无"
+        result = f"📋 转发绑定列表：\n{forwardlist_str}"
         yield event.plain_result(result)
     
     async def terminate(self):
