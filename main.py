@@ -126,7 +126,7 @@ class MyPlugin(Star):
             logger.info(f"会话: {session_id} 绑定 {app_name} 成功！")
             yield event.plain_result(f"当前会话绑定【{app_name}】成功！")
         else:
-            yield event.plain_result(f"当前会话已绑定【{app_name}】！请勿重复操作！")
+            yield event.plain_result(f"当前会话已绑定【{app_name}】！无法重复绑定！")
             
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("转发解绑")
@@ -145,7 +145,7 @@ class MyPlugin(Star):
             logger.info(f"会话: {session_id} 解绑 {app_name} 成功！")
             yield event.plain_result(f"当前会话解绑【{app_name}】成功！")
         else:
-            yield event.plain_result(f"当前会话未绑定【{app_name}】！请勿重复操作！")
+            yield event.plain_result(f"当前会话未绑定【{app_name}】！无法重复解绑！")
     
     @filter.permission_type(PermissionType.ADMIN)
     @filter.command("转发列表")
