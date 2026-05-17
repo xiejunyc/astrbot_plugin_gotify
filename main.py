@@ -90,7 +90,7 @@ class MyPlugin(Star):
 
             except Exception as e:
                 logger.error(f"Gotify 连接断开，已收到的消息 {received}，尝试重连: {e}")
-                if self.backup_forward_server:
+                if self.backup_forward_server and self.backup_forward_format:
                     try:
                         backup_forward_str = self.backup_forward_format.format(
                             title=backup_forward_title,
