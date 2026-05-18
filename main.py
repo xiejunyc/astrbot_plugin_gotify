@@ -78,8 +78,8 @@ class MyPlugin(Star):
         """开始监听 Gotify 消息的异步方法，掉线时尝试重连"""
         while True:
             received: int = 0
-            backup_forward_title = ""
-            backup_forward_message = ""
+            backup_forward_title = "Gotify 连接断开"
+            backup_forward_message = "Gotify 尝试重连"
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
