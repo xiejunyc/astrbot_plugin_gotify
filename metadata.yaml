@@ -1,4 +1,4 @@
-name: "astrbot_plugin_gotify"
+name: "gotify转发"
 desc: "该插件可以监听gotify的信息，并转发给你的机器人"
 version: "v1.0.1"
 author: "自用插件"
