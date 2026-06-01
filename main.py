@@ -83,7 +83,7 @@ class MyPlugin(Star):
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
-                    backup_forward_title = "Gotify转发 遗漏消息"
+                    backup_forward_title = "Gotify转发 可能遗漏"
                     backup_forward_message = f"标题：{msg.get('title', 'title获取错误')}"
                     received = received + 1
                     await self.handle_message(msg)
