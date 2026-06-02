@@ -14,6 +14,17 @@
         "type": "list",
         "hint": "将转发的群聊或私聊与Gotify应用名称绑定，必须绑定才会转发"
     },
+    "forward_delay": {
+        "description": "转发延迟",
+        "type": "float",
+        "slider": {
+            "min": 0.01,
+            "max": 3.0,
+            "step": 0.01
+        },
+        "default": 1.1,
+        "hint": "设置转发延迟，降低风控的风险"
+    },
     "backup_forward_server": {
         "description": "备用消息服务器",
         "type": "text",
