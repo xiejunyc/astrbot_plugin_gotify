@@ -80,8 +80,8 @@ class MyPlugin(Star):
         """开始监听 Gotify 消息的异步方法，掉线时尝试重连"""
         while True:
             received: int = 0
-            backup_forward_title = "Gotify 连接断开"
-            backup_forward_message = "Gotify 尝试重连"
+            backup_forward_title = ""
+            backup_forward_message = ""
             try:
                 async for msg in self.gotify.stream():
                     logger.info(msg)
@@ -92,7 +92,7 @@ class MyPlugin(Star):
 
             except Exception as e:
                 logger.error(f"Gotify 连接断开，已收到的消息 {received}，尝试重连: {e}")
-                if self.backup_forward_server and self.backup_forward_format:
+                if self.backup_forward_server and self.backup_forward_format and backup_forward_title:
                     try:
                         backup_forward_str = self.backup_forward_format.format(
                             title=backup_forward_title.replace('\n', '\\n'),
@@ -179,7 +179,8 @@ class MyPlugin(Star):
             try:
                 *session_parts, bind_appname = binding.split(':')
                 session_id = ':'.join(session_parts)
-                forward_list.append(await optimize_item(session_id, bind_appname))
+                # forward_list.append(await optimize_item(session_id, bind_appname))
+                forward_list.append(f"{session_str}:{bind_appname}")
             except:
                 continue
 
