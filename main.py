@@ -177,10 +177,10 @@ class MyPlugin(Star):
         forward_list = []
         for binding in self.bindings:
             try:
-                *session_parts, bind_appname = binding.split(':')
-                session_id = ':'.join(session_parts)
+                # *session_parts, bind_appname = binding.split(':')
+                # session_id = ':'.join(session_parts)
                 # forward_list.append(await optimize_item(session_id, bind_appname))
-                forward_list.append(f"{session_str}:{bind_appname}")
+                forward_list.append(binding)
             except:
                 continue
 
