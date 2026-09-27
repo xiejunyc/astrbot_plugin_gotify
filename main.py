@@ -84,7 +84,7 @@ class MyPlugin(Star):
 
             except Exception as e:
                 delay = self.reconnect_delay
-                log.info(f"⏳ Gotify 连接断开！{delay} 秒后尝试重连")
+                logger.info(f"⏳ Gotify 连接断开！{delay} 秒后尝试重连")
                 await asyncio.sleep(delay)
         pass
 
