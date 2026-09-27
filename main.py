@@ -26,7 +26,7 @@ class MyPlugin(Star):
         self.server = config.get("server")
         self.token = config.get("token")
         self.bindings = list(config.get("bindings") or [])
-        self.forward_delay = config.get("forward_delay")
+        self.reconnect_delay = config.get("reconnect_delay")
         self.backup_forward_server = config.get("backup_forward_server")
         self.backup_forward_format = config.get("backup_forward_format")
         self.gotify: AsyncGotify = AsyncGotify(
@@ -73,7 +73,6 @@ class MyPlugin(Star):
 
             # 应用名匹配 → 转发消息
             if bind_appname == appname:
-                await asyncio.sleep(self.forward_delay)
                 await self.context.send_message(session_id, sendMsg)
 
     async def start_listen(self):
