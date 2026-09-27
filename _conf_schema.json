@@ -19,15 +19,5 @@
         "type": "int",
         "default": 30,
         "hint": "单位秒"
-    },
-    "backup_forward_server": {
-        "description": "备用消息服务器",
-        "type": "text",
-        "hint": "请输入备用消息服务器地址，转发给群聊或私聊失败时会将消息转发给此备用消息服务器"
-    },
-    "backup_forward_format": {
-        "description": "备用消息服务器请求格式(仅JSON)",
-        "type": "text",
-        "hint": "支持的占位符：{title}、{message}，除了占位符，JSON结构内其他 {} 必须改成双括号 {{ }} "
     }
 }
