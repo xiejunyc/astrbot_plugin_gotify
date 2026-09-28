@@ -13,11 +13,5 @@
         "description": "转发绑定",
         "type": "list",
         "hint": "将转发的群聊或私聊与Gotify应用名称绑定，必须绑定才会转发"
-    },
-    "reconnect_delay": {
-        "description": "掉线重连",
-        "type": "int",
-        "default": 30,
-        "hint": "单位秒"
     }
 }
