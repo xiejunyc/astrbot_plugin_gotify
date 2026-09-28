@@ -26,7 +26,6 @@ class MyPlugin(Star):
         self.server = config.get("server")
         self.token = config.get("token")
         self.bindings = list(config.get("bindings") or [])
-        self.reconnect_delay = config.get("reconnect_delay")
         self.gotify: AsyncGotify = AsyncGotify(
             base_url=self.server, client_token=self.token
         )
@@ -83,9 +82,8 @@ class MyPlugin(Star):
                     await self.handle_message(msg)
 
             except Exception as e:
-                delay = int(self.reconnect_delay)
-                logger.info(f"⏳ Gotify 连接断开！{delay} 秒后尝试重连")
-                await asyncio.sleep(delay)
+                logger.info("⏳ Gotify 连接断开！30 秒后尝试重连")
+                await asyncio.sleep(30)
         pass
 
     @filter.permission_type(PermissionType.ADMIN)
