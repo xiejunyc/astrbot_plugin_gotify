@@ -82,7 +82,7 @@ class MyPlugin(Star):
                     await self.handle_message(msg)
 
             except Exception as e:
-                logger.info("⏳ Gotify 连接断开！30 秒后尝试重连")
+                logger.error("⏳ Gotify 连接断开！30 秒后尝试重连")
                 await asyncio.sleep(30)
         pass
 
